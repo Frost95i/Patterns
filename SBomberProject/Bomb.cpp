@@ -13,3 +13,25 @@ void Bomb::Draw() const
     GotoXY(x, y);
     cout << "*";
 }
+
+
+void BombDecorator::Move(uint16_t time)
+{
+    m_bomb->Move(time * 1.6);
+}
+
+void BombDecorator::Draw() const
+{
+    m_bomb->Draw();
+    std::cout << "|";
+}
+
+void BombDecorator::SetPos(double nx, double ny)
+{
+    m_bomb->SetPos(nx, ny);
+}
+
+uint16_t BombDecorator::GetWidth() const
+{
+    return m_bomb->GetWidth();
+}
