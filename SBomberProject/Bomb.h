@@ -14,17 +14,3 @@ private:
 
 };
 
-class BombDecorator : public DynamicObject
-{
-public:
-    BombDecorator(DynamicObject* bomb) : m_bomb(bomb)
-    {
-    }
-    void Move(uint16_t time) override;
-    void Draw() const override;
-
-    void SetPos(double nx, double ny) ;
-    uint16_t GetWidth() const ;
-private:
-    DynamicObject* m_bomb;
-};

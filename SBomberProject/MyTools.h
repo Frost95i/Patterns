@@ -2,29 +2,30 @@
 
 #include <stdint.h>
 #include <string>
+#include <fstream>
 
 namespace MyTools {
 
-	// Палитра цветов от 0 до 15
-	enum ConsoleColor
-	{
-		CC_Black = 0,
-		CC_Blue,
-		CC_Green,
-		CC_Cyan,
-		CC_Red,
-		CC_Magenta,
-		CC_Brown,
-		CC_LightGray,
-		CC_DarkGray,
-		CC_LightBlue,
-		CC_LightGreen,
-		CC_LightCyan,
-		CC_LightRed,
-		CC_LightMagenta,
-		CC_Yellow,
-		CC_White
-	};
+    // Палитра цветов от 0 до 15
+    enum ConsoleColor
+    {
+        CC_Black = 0,
+        CC_Blue,
+        CC_Green,
+        CC_Cyan,
+        CC_Red,
+        CC_Magenta,
+        CC_Brown,
+        CC_LightGray,
+        CC_DarkGray,
+        CC_LightBlue,
+        CC_LightGreen,
+        CC_LightCyan,
+        CC_LightRed,
+        CC_LightMagenta,
+        CC_Yellow,
+        CC_White
+    };
 
 	//=============================================================================================
 
@@ -36,52 +37,60 @@ namespace MyTools {
 
 	uint16_t GetMaxY();
 
-	void SetColor(ConsoleColor color);
+    void SetColor(ConsoleColor color);
 
 	//=============================================================================================
 
-	struct ILogger {
-	public:
-		
+    class ILogger {
+    public:
+        virtual ~ILogger() = default;
+        virtual void OpenLogFile(const std::string& filename) = 0;
+        virtual void CloseLogFile() = 0;
+        virtual void WriteToLog(const std::string& str) = 0;
+        virtual void WriteToLog(const std::string& str, int n) = 0;
+        virtual void WriteToLog(const std::string& str, double d) = 0;
+    };
 
-		virtual void __fastcall WriteToLog(const std::string& str);
+    class FileLoggerSingleton : public ILogger {
+    public:
+        static FileLoggerSingleton& getInstance() {
+            static FileLoggerSingleton instance;
+            return instance;
+        }
 
-		virtual void __fastcall WriteToLog(const std::string& str, int n);
+        void OpenLogFile(const std::string& filename) override;
+        void CloseLogFile() override;
+        void WriteToLog(const std::string& str) override;
+        void WriteToLog(const std::string& str, int n) override;
+        void WriteToLog(const std::string& str, double d) override;
 
-		virtual void __fastcall WriteToLog(const std::string& str, double d);
-	};
+    private:
+        FileLoggerSingleton() = default;
+        FileLoggerSingleton(const FileLoggerSingleton&) = delete;
+        FileLoggerSingleton& operator=(const FileLoggerSingleton&) = delete;
+        FileLoggerSingleton(FileLoggerSingleton&&) = delete;
+        FileLoggerSingleton& operator=(FileLoggerSingleton&&) = delete;
 
-	class FileLoggerSingletone  {
-	public:
-		void __fastcall  OpenLogFile(const std::string& FN);
+        static std::string GetCurDateTime();
 
-		void CloseLogFile();
+        std::ofstream logOut;
+    };
 
-		void __fastcall WriteToLog(const std::string& str) ;
+    class ProxyLogger : public ILogger {
+    public:
+        ProxyLogger(ILogger& logger) : logger{logger} {}
+        ~ProxyLogger() override;
 
-		void __fastcall WriteToLog(const std::string& str, int n) ;
+        void OpenLogFile(const std::string& filename) override;
+        void CloseLogFile() override;
+        void WriteToLog(const std::string& str) override;
+        void WriteToLog(const std::string& str, int n) override;
+        void WriteToLog(const std::string& str, double d) override;
 
-		void __fastcall WriteToLog(const std::string& str, double d);
-
-		static FileLoggerSingletone& getInstance();
-	private:
-		FileLoggerSingletone() { }
-		FileLoggerSingletone(const FileLoggerSingletone& root) = delete;
-		FileLoggerSingletone& operator=(const FileLoggerSingletone&) = delete;
-	};
-
-	class ProxyLogger  {
-	public:
-		ProxyLogger()  {}
-		void  __fastcall WriteToLog(const std::string& str)  ;
-
-		void __fastcall  WriteToLog(const std::string& str, int n) ;
-
-		void __fastcall  WriteToLog(const std::string& str, double d)  ;
-	private:
-		 int count = 0;
-	};
-
+    private:
+        ILogger& logger;
+        uint32_t counter{0u};
+    };
 
 	//=============================================================================================
 

@@ -1,12 +1,8 @@
 ﻿
 #include <conio.h>
-#include <thread>
-#include <chrono>
-
 
 #include "SBomber.h"
 #include "MyTools.h"
-
 
 using namespace std;
 
@@ -14,11 +10,10 @@ using namespace std;
 
 int main(void)
 {
-   // MyTools::FileLoggerSingletone::getInstance();
-    MyTools::FileLoggerSingletone& logger = MyTools::FileLoggerSingletone::getInstance();
+    MyTools::ProxyLogger logger{MyTools::FileLoggerSingleton::getInstance()};
     logger.OpenLogFile("log.txt");
 
-    SBomber game; 
+    SBomber game{logger};
 
     do {
         game.TimeStart();
@@ -27,7 +22,7 @@ int main(void)
         {
             game.ProcessKBHit();
         }
-        std::this_thread::sleep_for(100ms);
+
         MyTools::ClrScr();
 
         game.DrawFrame();
