@@ -1,5 +1,0 @@
-Sun Apr  3 11:07:09 2022 - SBomber::SBomber was invoked
-Sun Apr  3 11:07:09 2022 - SBomber::TimeStart was invoked
-Sun Apr  3 11:07:10 2022 - SBomber::DrawFrame was invoked
-Sun Apr  3 11:07:10 2022 - SBomber::MoveObjects was invoked
-Sun Apr  3 11:07:10 2022 - SBomber::CheckObjects was invoked
