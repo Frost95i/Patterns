@@ -2,6 +2,7 @@
 
 #include "DynamicObject.h"
 
+
 class Bomb : public DynamicObject
 {
 public:
@@ -10,6 +11,9 @@ public:
 
 	void Draw() const override;
 
+	void Accept( Visitor& v) override {
+		v.log(this);
+	}
 private:
 
 };

@@ -1,13 +1,12 @@
 
 #include <conio.h>
 #include <windows.h>
-
+#include "Visitor.h"
 #include "SBomber.h"
 #include "Bomb.h"
 #include "Ground.h"
 #include "Tank.h"
 #include "House.h"
-#include <typeinfo>
 
 using namespace std;
 using namespace MyTools;
@@ -24,6 +23,8 @@ SBomber::SBomber(ILogger& logger)
     logger{logger}
 {
     logger.WriteToLog(string(__FUNCTION__) + " was invoked");
+
+    
 
     Plane* p = new Plane;
     p->SetDirection(1, 0.1);
@@ -96,12 +97,14 @@ SBomber::~SBomber()
 void SBomber::MoveObjects()
 {
     logger.WriteToLog(string(__FUNCTION__) + " was invoked");
+    LogVisitor logVis(logger);
 
     for (size_t i = 0; i < vecDynamicObj.size(); i++)
     {
         if (vecDynamicObj[i] != nullptr)
         {
             vecDynamicObj[i]->Move(deltaTime);
+            vecDynamicObj[i]->Accept(logVis);
         }
     }
 };
@@ -225,41 +228,19 @@ Ground* SBomber::FindGround() const
 
 vector<Bomb*> SBomber::FindAllBombs() const
 {
-    std::vector<Bomb*> vecBombs;
-   BombIterator* it = new BombIterator(vecDynamicObj);
-   
-    //SBomber::BombIterator it = dynamic_cast<BombIterator*>(vecDynamicObj.begin());
-    
-   //it = vecDynamicObj.begin();
-   
-   for (; *it != it->end(); it++)
-    {
-            //vecBombs.push_back(dynamic_cast<Bomb*>(it));
-            vecBombs.push_back(**it);
+    vector<Bomb*> vecBombs;
 
+    for (size_t i = 0; i < vecDynamicObj.size(); i++)
+    {
+        Bomb* pBomb = dynamic_cast<Bomb*>(vecDynamicObj[i]);
+        if (pBomb != nullptr)
+        {
+            vecBombs.push_back(pBomb);
+        }
     }
 
     return vecBombs;
 }
-
-
-//vector<Bomb*> SBomber::FindAllBombs() const
-//{
-//    vector<Bomb*> vecBombs;
-//    BombIterator it(SBomber::vecDynamicObj);
-//    it = vecDynamicObj.begin();
-//
-//    for (size_t i = 0; i < vecDynamicObj.size(); i++)
-//    {
-//        Bomb* pBomb = dynamic_cast<Bomb*>(vecDynamicObj[i]);
-//        if (pBomb != nullptr)
-//        {
-//            vecBombs.push_back(pBomb);
-//        }
-//    }
-//
-//    return vecBombs;
-//}
 
 Plane* SBomber::FindPlane() const
 {

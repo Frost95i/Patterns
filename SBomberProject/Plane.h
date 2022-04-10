@@ -9,6 +9,11 @@ public:
 
     inline void ChangePlaneY(double dy) { yDirection += dy; }
 
+    void Accept( Visitor& v) override {
+        v.log(this);
+        
+    }
+
 private:
 
 };
