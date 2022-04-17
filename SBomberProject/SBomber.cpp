@@ -1,18 +1,77 @@
-
+п»ї
 #include <conio.h>
 #include <windows.h>
+#include <vector>
 
+
+#include "LevelGUI.h"
+#include "Plane.h"
+#include "MyTools.h"
 #include "SBomber.h"
 #include "Bomb.h"
 #include "Ground.h"
 #include "Tank.h"
 #include "House.h"
-#include <typeinfo>
 
 using namespace std;
 using namespace MyTools;
 
-SBomber::SBomber(ILogger& logger)
+
+class  SBomberImp {
+public:
+    SBomberImp(MyTools::ILogger& logger);
+    ~SBomberImp();
+
+    void ProcessKBHit();
+    void TimeStart();
+    void TimeFinish();
+
+    void DrawFrame();
+    void MoveObjects();
+    void CheckObjects();
+
+    void CheckPlaneAndLevelGUI();
+    void CheckBombsAndGround();
+    void __fastcall CheckDestoyableObjects(Bomb* pBomb);
+
+    void __fastcall DeleteDynamicObj(DynamicObject* pBomb);
+    void __fastcall DeleteStaticObj(GameObject* pObj);
+
+    Ground* FindGround() const;
+    Plane* FindPlane() const;
+    LevelGUI* FindLevelGUI() const;
+    std::vector<DestroyableGroundObject*> FindDestoyableGroundObjects() const;
+    std::vector<Bomb*> FindAllBombs() const;
+
+    void DropBomb();
+
+    std::vector<DynamicObject*> vecDynamicObj;
+    std::vector<GameObject*> vecStaticObj;
+
+    bool exitFlag;
+
+    uint64_t startTime, finishTime, passedTime;
+    uint16_t bombsNumber, deltaTime, fps;
+    int16_t score;
+
+    MyTools::ILogger& logger;
+};
+
+
+SBomber::SBomber(MyTools::ILogger& logger) : impl(new SBomberImp(logger)), logger(logger) {}
+
+bool SBomber::GetExitFlag() const { return impl->exitFlag; }
+
+
+void SBomber::ProcessKBHit() { impl->ProcessKBHit(); }
+void SBomber::TimeStart() { impl->TimeStart(); }
+void SBomber::TimeFinish() { impl->TimeFinish(); }
+void SBomber::DrawFrame() { impl->DrawFrame(); }
+void SBomber::MoveObjects() { impl->MoveObjects(); }
+void SBomber::CheckObjects() { impl->CheckObjects(); }
+
+
+SBomberImp::SBomberImp(MyTools::ILogger& logger)
     : exitFlag(false),
     startTime(0),
     finishTime(0),
@@ -21,7 +80,7 @@ SBomber::SBomber(ILogger& logger)
     fps(0),
     bombsNumber(10),
     score(0),
-    logger{logger}
+    logger(logger)
 {
     logger.WriteToLog(string(__FUNCTION__) + " was invoked");
 
@@ -34,7 +93,7 @@ SBomber::SBomber(ILogger& logger)
     LevelGUI* pGUI = new LevelGUI;
     pGUI->SetParam(passedTime, fps, bombsNumber, score);
     const uint16_t maxX = GetMaxX();
-    const uint16_t maxY = GetMaxY(); 
+    const uint16_t maxY = GetMaxY();
     const uint16_t offset = 3;
     const uint16_t width = maxX - 7;
     pGUI->SetPos(offset, offset);
@@ -59,22 +118,14 @@ SBomber::SBomber(ILogger& logger)
     pTank->SetPos(50, groundY - 1);
     vecStaticObj.push_back(pTank);
 
-    House * pHouse = new House;
+    House* pHouse = new House;
     pHouse->SetWidth(13);
     pHouse->SetPos(80, groundY - 1);
     vecStaticObj.push_back(pHouse);
 
-    /*
-    Bomb* pBomb = new Bomb;
-    pBomb->SetDirection(0.3, 1);
-    pBomb->SetSpeed(2);
-    pBomb->SetPos(51, 5);
-    pBomb->SetSize(SMALL_CRATER_SIZE);
-    vecDynamicObj.push_back(pBomb);
-    */
 }
 
-SBomber::~SBomber()
+SBomberImp::~SBomberImp()
 {
     for (size_t i = 0; i < vecDynamicObj.size(); i++)
     {
@@ -93,7 +144,7 @@ SBomber::~SBomber()
     }
 }
 
-void SBomber::MoveObjects()
+void SBomberImp::MoveObjects()
 {
     logger.WriteToLog(string(__FUNCTION__) + " was invoked");
 
@@ -106,7 +157,7 @@ void SBomber::MoveObjects()
     }
 };
 
-void SBomber::CheckObjects()
+void SBomberImp::CheckObjects()
 {
     logger.WriteToLog(string(__FUNCTION__) + " was invoked");
 
@@ -114,7 +165,7 @@ void SBomber::CheckObjects()
     CheckBombsAndGround();
 };
 
-void SBomber::CheckPlaneAndLevelGUI()
+void SBomberImp::CheckPlaneAndLevelGUI()
 {
     if (FindPlane()->GetX() > FindLevelGUI()->GetFinishX())
     {
@@ -122,14 +173,14 @@ void SBomber::CheckPlaneAndLevelGUI()
     }
 }
 
-void SBomber::CheckBombsAndGround() 
+void SBomberImp::CheckBombsAndGround()
 {
     vector<Bomb*> vecBombs = FindAllBombs();
     Ground* pGround = FindGround();
     const double y = pGround->GetY();
     for (size_t i = 0; i < vecBombs.size(); i++)
     {
-        if (vecBombs[i]->GetY() >= y) // Пересечение бомбы с землей
+        if (vecBombs[i]->GetY() >= y) 
         {
             pGround->AddCrater(vecBombs[i]->GetX());
             CheckDestoyableObjects(vecBombs[i]);
@@ -139,7 +190,7 @@ void SBomber::CheckBombsAndGround()
 
 }
 
-void SBomber::CheckDestoyableObjects(Bomb * pBomb)
+void SBomberImp::CheckDestoyableObjects(Bomb* pBomb)
 {
     vector<DestroyableGroundObject*> vecDestoyableObjects = FindDestoyableGroundObjects();
     const double size = pBomb->GetWidth();
@@ -156,7 +207,7 @@ void SBomber::CheckDestoyableObjects(Bomb * pBomb)
     }
 }
 
-void SBomber::DeleteDynamicObj(DynamicObject* pObj)
+void SBomberImp::DeleteDynamicObj(DynamicObject* pObj)
 {
     auto it = vecDynamicObj.begin();
     for (; it != vecDynamicObj.end(); it++)
@@ -169,7 +220,7 @@ void SBomber::DeleteDynamicObj(DynamicObject* pObj)
     }
 }
 
-void SBomber::DeleteStaticObj(GameObject* pObj)
+void SBomberImp::DeleteStaticObj(GameObject* pObj)
 {
     auto it = vecStaticObj.begin();
     for (; it != vecStaticObj.end(); it++)
@@ -182,7 +233,7 @@ void SBomber::DeleteStaticObj(GameObject* pObj)
     }
 }
 
-vector<DestroyableGroundObject*> SBomber::FindDestoyableGroundObjects() const
+vector<DestroyableGroundObject*> SBomberImp::FindDestoyableGroundObjects() const
 {
     vector<DestroyableGroundObject*> vec;
     Tank* pTank;
@@ -207,13 +258,13 @@ vector<DestroyableGroundObject*> SBomber::FindDestoyableGroundObjects() const
     return vec;
 }
 
-Ground* SBomber::FindGround() const
+Ground* SBomberImp::FindGround() const
 {
     Ground* pGround;
 
     for (size_t i = 0; i < vecStaticObj.size(); i++)
     {
-        pGround = dynamic_cast<Ground *>(vecStaticObj[i]);
+        pGround = dynamic_cast<Ground*>(vecStaticObj[i]);
         if (pGround != nullptr)
         {
             return pGround;
@@ -223,45 +274,23 @@ Ground* SBomber::FindGround() const
     return nullptr;
 }
 
-vector<Bomb*> SBomber::FindAllBombs() const
+vector<Bomb*> SBomberImp::FindAllBombs() const
 {
-    std::vector<Bomb*> vecBombs;
-   BombIterator* it = new BombIterator(vecDynamicObj);
-   
-    //SBomber::BombIterator it = dynamic_cast<BombIterator*>(vecDynamicObj.begin());
-    
-   //it = vecDynamicObj.begin();
-   
-   for (; *it != it->end(); it++)
-    {
-            //vecBombs.push_back(dynamic_cast<Bomb*>(it));
-            vecBombs.push_back(**it);
+    vector<Bomb*> vecBombs;
 
+    for (size_t i = 0; i < vecDynamicObj.size(); i++)
+    {
+        Bomb* pBomb = dynamic_cast<Bomb*>(vecDynamicObj[i]);
+        if (pBomb != nullptr)
+        {
+            vecBombs.push_back(pBomb);
+        }
     }
 
     return vecBombs;
 }
 
-
-//vector<Bomb*> SBomber::FindAllBombs() const
-//{
-//    vector<Bomb*> vecBombs;
-//    BombIterator it(SBomber::vecDynamicObj);
-//    it = vecDynamicObj.begin();
-//
-//    for (size_t i = 0; i < vecDynamicObj.size(); i++)
-//    {
-//        Bomb* pBomb = dynamic_cast<Bomb*>(vecDynamicObj[i]);
-//        if (pBomb != nullptr)
-//        {
-//            vecBombs.push_back(pBomb);
-//        }
-//    }
-//
-//    return vecBombs;
-//}
-
-Plane* SBomber::FindPlane() const
+Plane* SBomberImp::FindPlane() const
 {
     for (size_t i = 0; i < vecDynamicObj.size(); i++)
     {
@@ -275,7 +304,7 @@ Plane* SBomber::FindPlane() const
     return nullptr;
 }
 
-LevelGUI* SBomber::FindLevelGUI() const
+LevelGUI* SBomberImp::FindLevelGUI() const
 {
     for (size_t i = 0; i < vecStaticObj.size(); i++)
     {
@@ -289,7 +318,7 @@ LevelGUI* SBomber::FindLevelGUI() const
     return nullptr;
 }
 
-void SBomber::ProcessKBHit()
+void SBomberImp::ProcessKBHit()
 {
     int c = _getch();
 
@@ -327,7 +356,7 @@ void SBomber::ProcessKBHit()
     }
 }
 
-void SBomber::DrawFrame()
+void SBomberImp::DrawFrame()
 {
     logger.WriteToLog(string(__FUNCTION__) + " was invoked");
 
@@ -353,13 +382,13 @@ void SBomber::DrawFrame()
     FindLevelGUI()->SetParam(passedTime, fps, bombsNumber, score);
 }
 
-void SBomber::TimeStart()
+void SBomberImp::TimeStart()
 {
     logger.WriteToLog(string(__FUNCTION__) + " was invoked");
     startTime = GetTickCount64();
 }
 
-void SBomber::TimeFinish()
+void SBomberImp::TimeFinish()
 {
     finishTime = GetTickCount64();
     deltaTime = uint16_t(finishTime - startTime);
@@ -368,7 +397,7 @@ void SBomber::TimeFinish()
     logger.WriteToLog(string(__FUNCTION__) + " deltaTime = ", (int)deltaTime);
 }
 
-void SBomber::DropBomb()
+void SBomberImp::DropBomb()
 {
     if (bombsNumber > 0)
     {
