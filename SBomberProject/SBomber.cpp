@@ -7,7 +7,6 @@
 #include "Ground.h"
 #include "Tank.h"
 #include "House.h"
-#include <typeinfo>
 
 using namespace std;
 using namespace MyTools;
@@ -225,41 +224,19 @@ Ground* SBomber::FindGround() const
 
 vector<Bomb*> SBomber::FindAllBombs() const
 {
-    std::vector<Bomb*> vecBombs;
-   BombIterator* it = new BombIterator(vecDynamicObj);
-   
-    //SBomber::BombIterator it = dynamic_cast<BombIterator*>(vecDynamicObj.begin());
-    
-   //it = vecDynamicObj.begin();
-   
-   for (; *it != it->end(); it++)
-    {
-            //vecBombs.push_back(dynamic_cast<Bomb*>(it));
-            vecBombs.push_back(**it);
+    vector<Bomb*> vecBombs;
 
+    for (size_t i = 0; i < vecDynamicObj.size(); i++)
+    {
+        Bomb* pBomb = dynamic_cast<Bomb*>(vecDynamicObj[i]);
+        if (pBomb != nullptr)
+        {
+            vecBombs.push_back(pBomb);
+        }
     }
 
     return vecBombs;
 }
-
-
-//vector<Bomb*> SBomber::FindAllBombs() const
-//{
-//    vector<Bomb*> vecBombs;
-//    BombIterator it(SBomber::vecDynamicObj);
-//    it = vecDynamicObj.begin();
-//
-//    for (size_t i = 0; i < vecDynamicObj.size(); i++)
-//    {
-//        Bomb* pBomb = dynamic_cast<Bomb*>(vecDynamicObj[i]);
-//        if (pBomb != nullptr)
-//        {
-//            vecBombs.push_back(pBomb);
-//        }
-//    }
-//
-//    return vecBombs;
-//}
 
 Plane* SBomber::FindPlane() const
 {
@@ -383,6 +360,13 @@ void SBomber::DropBomb()
         pBomb->SetSpeed(2);
         pBomb->SetPos(x, y);
         pBomb->SetWidth(SMALL_CRATER_SIZE);
+
+        Bomb* bombClone(pBomb->clone());
+        bombClone->SetPos(x + 1, y - 1);
+
+        vecDynamicObj.push_back(bombClone);
+        bombsNumber--;
+        score -= Bomb::BombCost;
 
         vecDynamicObj.push_back(pBomb);
         bombsNumber--;
